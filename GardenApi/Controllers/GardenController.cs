@@ -6,7 +6,7 @@ namespace GardenApi.Controllers;
 [Route("[controller]/plants")]
 public class GardenController : ControllerBase
 {
-    // Static list of example plants.
+    // Static list of plants.
     // Months are 1=January to 12=December.
     // These are typical safe outdoor start/end ranges (direct sow or transplant).
     private static readonly List<Plant> Plants = new()
