@@ -11,8 +11,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // Add later.
 }
+
+app.MapOpenApi();
 
 app.UseAuthorization();
 
