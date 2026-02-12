@@ -38,6 +38,13 @@ public class GardenController : ControllerBase
             StartMonth = 10, // October (main fall planting for big bulbs)
             EndMonth = 11,    // November (up to mid/late Nov works in mild coast)
             Instructions = "Use big planters."
+        },
+           new Plant
+        {
+            Name = "Onions",
+            StartMonth = 10, // October (main fall planting for big bulbs)
+            EndMonth = 11,    // November (up to mid/late Nov works in mild coast)
+            Instructions = "Use big planters."
         }
     };
 
