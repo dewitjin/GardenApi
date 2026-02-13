@@ -32,6 +32,13 @@ public class GardenController : ControllerBase
             EndMonth = 11,    // November (best Oct-Nov when soil cools)
             Instructions = "Use special fertilizer."
         },
+          new Plant
+        {
+            Name = "Daffodils",
+            StartMonth = 9,  // September (start of fall bulb planting)
+            EndMonth = 11,    // November (best Oct-Nov when soil cools)
+            Instructions = "Use special fertilizer."
+        },
         new Plant
         {
             Name = "Garlic",
