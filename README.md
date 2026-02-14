@@ -9,8 +9,8 @@ https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/garden/pla
 Uploading images<br>
 https://localhost:7294/garden/plants/upload/1<br><br>
 
-![Insomnia API Test](images/insomnia-test.png)<br>
-![Eggplants in Storage Explorer](images/local-testing-storage-explorer-eggplants.png)<br>
+![Insomnia API Test](images/local%20testing%20with%20insomnia.png)<br>
+![Eggplants in Storage Explorer](images/local%20testing%20storage%20explorer%20eggplants.png)<br>
 
 OpenAPI JSON<br>
 https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/openapi/v1.json
