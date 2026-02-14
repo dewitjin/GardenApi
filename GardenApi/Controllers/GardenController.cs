@@ -45,6 +45,7 @@ public class GardenController : ControllerBase
     [HttpPost("upload/{plantId}", Name = "UploadImage")]
     public async Task<IActionResult> UploadImage(int plantId, IFormFile image)
     {
+        Console.WriteLine("Upload called");  // or use ILogger
         var result = _plantImageService.ValidateImage(plantId, image);
         if (result.IsFailure)
         {
