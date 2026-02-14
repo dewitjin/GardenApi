@@ -27,4 +27,10 @@ public class Plant
     /// Any special instructions for planting this plant.
     /// </summary>
     public string? Instructions { get; set; }
+
+   /// <summary>
+   /// The filename of an image representing this plant. 
+   /// This could be used to display an image in the UI.
+   /// </summary>
+    public string? ImageFileName { get; set; }
 }
