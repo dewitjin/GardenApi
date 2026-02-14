@@ -42,20 +42,20 @@ public class GardenController : ControllerBase
         return Ok(plants);
     }
 
-    [HttpPost("upload")]
-    public async Task<IActionResult> UploadImage(IFormFile image)
+    [HttpPost("upload/{plantId}", Name = "UploadImage")]
+    public async Task<IActionResult> UploadImage(int plantId, IFormFile image)
     {
-        if (image == null || image.Length == 0)
+        var result = _plantImageService.ValidateImage(plantId, image);
+        if (result.IsFailure)
         {
-            return BadRequest("No image uploaded.");
+            return BadRequest(result.Error);
         }
-
-        // TODO: add url to bus image later.
-        var imageUrl = await _plantImageService.UploadImageAsync(image);
-
-        // // Send message to Service Bus
-        // var message = new ServiceBusMessage(JsonSerializer.Serialize(new { ImageUrl = imageUrl, Action = "Review" }));
-        // await _sender.SendMessageAsync(message);
+       
+        result = await _plantImageService.UploadAndSaveImageAsync(plantId, image);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
 
         return Ok("Image uploaded and review requested.");
     }

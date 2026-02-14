@@ -33,4 +33,10 @@ public class Plant
    /// This could be used to display an image in the UI.
    /// </summary>
     public string? ImageFileName { get; set; }
+
+    /// <summary>
+    /// Indicates whether the uploaded image for this plant 
+    /// has been approved by a human reviewer.
+    /// </summary>
+    public bool isImageApproved { get; set; }   
 }
