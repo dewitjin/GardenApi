@@ -59,4 +59,27 @@ public class GardenController : ControllerBase
 
         return Ok("Image uploaded and review requested.");
     }
+
+    [HttpPut("approve/{plantId}", Name = "ApproveImage")]
+    public async Task<IActionResult> ApproveImage(int plantId)
+    {
+        var result = await _plantImageService.ApproveImage(plantId);
+        if (result.IsFailure)        
+        {
+            return BadRequest(result.Error);
+        }   
+
+        return Ok("Image approved.");
+    }
+
+    [HttpDelete("delete/{plantId}", Name = "DeleteImage")]
+    public async Task<IActionResult> DeleteImage(int plantId)
+    {
+        var result = await _plantImageService.DeleteImageUpdatePlantImageName(plantId);
+        if (result.IsFailure)        
+        {
+            return BadRequest(result.Error);        
+        }
+        return Ok("Image deleted.");
+    }
 }

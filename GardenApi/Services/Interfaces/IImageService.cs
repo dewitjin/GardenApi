@@ -30,4 +30,20 @@ public interface IImageService
     /// <param name="image">The image to upload.</param>
     /// <returns>The URL of the uploaded image.</returns>
     Task<string> UploadImageAsync(IFormFile image);
+
+    /// <summary>
+    /// Approves the uploaded image for the specified plant 
+    /// by updating the database record to mark the image as approved.
+    /// </summary>
+    /// <param name="plantId">The ID of the plant whose image is to be approved.</param>
+    /// <returns>A Result object indicating success or failure of the approval operation.</returns>
+    Task<Result> ApproveImage(int plantId);
+
+    /// <summary>
+    /// Deletes the uploaded image for the specified plant by removing the image from Azure Blob Storage
+    /// and updating the database record to remove the image URL and mark it as not approved.
+    /// </summary>
+    /// <param name="plantId">The ID of the plant whose image is to be deleted.</param>
+    /// <returns>A Result object indicating success or failure of the deletion operation.</returns>
+    Task<Result> DeleteImageUpdatePlantImageName(int plantId);
 }

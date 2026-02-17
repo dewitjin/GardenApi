@@ -66,6 +66,47 @@ public class PlantImageService : IImageService
         return blob.Uri.ToString();
     }
 
+    /// <inheritdoc/>
+    public async Task<Result> ApproveImage(int plantId)
+    {
+        var plant = await _context.Plants.FindAsync(plantId);
+        if (plant == null)
+        {
+            return Result.Failure("Plant not found.");
+        }
+
+        plant.isImageApproved = true;
+        await _context.SaveChangesAsync();
+        return Result.Success();
+    }
+
+      /// <inheritdoc/>
+    public async Task<Result> DeleteImageUpdatePlantImageName(int plantId)
+    {
+        var plant = await _context.Plants.FindAsync(plantId);
+        if (plant == null)
+        {
+            return Result.Failure("Plant not found.");
+        }
+
+         // Delete the image from Azure Blob Storage before 
+         // updateing the plant data.
+        if (!string.IsNullOrEmpty(plant.ImageFileName))
+        {
+            var container = _blobServiceClient.GetBlobContainerClient(ContainerName);
+            var blobName = Path.GetFileName(new Uri(plant.ImageFileName).LocalPath);
+            var blob = container.GetBlobClient(blobName);
+            await blob.DeleteIfExistsAsync();
+        }
+
+        plant.isImageApproved = false;
+        plant.ImageFileName = null;
+        await _context.SaveChangesAsync();
+
+        return Result.Success();
+    }
+
+
     /// <summary>
     /// Saves the image URL to the database for the specified plant and marks it as pending review.
     /// </summary>
