@@ -20,6 +20,11 @@ https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/garden/pla
 ![Insomnia API Test - Live Endpoint](images/live-upload-testing.png)<br>
 ![Eggplants in Storage Explorer](images/live-upload-image-carrots.png)<br>
 
+## TESTING NOW. NOT READY:
+
+https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/garden/plants/approve/{plantId}
+https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/garden/plants/delete/{plantId}
+
 
 OpenAPI JSON<br>
 https://gardenapi-h6b6bebhf9gndqhb.canadacentral-01.azurewebsites.net/openapi/v1.json
