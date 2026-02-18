@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Azure.Messaging.ServiceBus;
 using Azure.Storage.Blobs;
 using GardenApi.Data;
 using GardenApi.Services.Interfaces;
@@ -11,11 +13,13 @@ public class PlantImageService : IImageService
     private readonly BlobServiceClient _blobServiceClient;
     private readonly GardenDbContext _context;
     private const string ContainerName = "plant-images";
+    private readonly ServiceBusSender _serviceBusSender;
 
-    public PlantImageService(BlobServiceClient blobServiceClient, GardenDbContext context)
+    public PlantImageService(BlobServiceClient blobServiceClient, GardenDbContext context, ServiceBusSender serviceBusSender)
     {
         _blobServiceClient = blobServiceClient;
         _context = context;
+        _serviceBusSender = serviceBusSender;
     }
 
     /// <inheritdoc/>
@@ -48,7 +52,7 @@ public class PlantImageService : IImageService
         var imageUrl = await UploadImageAsync(image);
         var result = await SaveImageToDatabaseAsync(plantId, imageUrl);
 
-        SendMessageToServiceBus(plantId, imageUrl);
+        SendMessageToServiceBusAsync(plantId, imageUrl);
 
         return result;
     }
@@ -137,15 +141,15 @@ public class PlantImageService : IImageService
     /// </summary>
     /// <param name="plantId">The ID of the plant whose image is being reviewed.</param>
     /// <param name="imageUrl">The URL of the uploaded image.</param>
-    private void SendMessageToServiceBus(int plantId, string imageUrl)
+    private async Task SendMessageToServiceBusAsync(int plantId, string imageUrl)
     {
-        // Send message to service bus (uncomment when ready)
-        // var message = new ServiceBusMessage(JsonSerializer.Serialize(new 
-        // { 
-        //     ImageUrl = imageUrl, 
-        //     PlantId = plantId,   // ← now you can include plantId too!
-        //     Action = "Review" 
-        // }));
-        // await _sender.SendMessageAsync(message);
+        var message = new ServiceBusMessage(JsonSerializer.Serialize(new 
+        { 
+            ImageUrl = imageUrl, 
+            PlantId = plantId,
+            Action = "Review" 
+        }));
+        
+        await _serviceBusSender.SendMessageAsync(message);
     }
 }
