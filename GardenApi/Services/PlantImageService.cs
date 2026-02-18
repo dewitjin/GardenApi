@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using GardenApi.Data;
 using GardenApi.Services.Interfaces;
 using GardenApi.Utilities.Results;
@@ -49,10 +50,26 @@ public class PlantImageService : IImageService
     /// <inheritdoc/>
     public async Task<Result> UploadAndSaveImageAsync(int plantId, IFormFile image)
     {
+        // 1. Upload to blob storage → get permanent URL
         var imageUrl = await UploadImageAsync(image);
-        var result = await SaveImageToDatabaseAsync(plantId, imageUrl);
 
-        SendMessageToServiceBusAsync(plantId, imageUrl);
+        // 2. Generate SAS URL for review (e.g., 30 days)
+        var blobClient = _blobServiceClient
+            .GetBlobContainerClient(ContainerName)
+            .GetBlobClient(Path.GetFileName(imageUrl));  // extract blob name from URL
+
+        var reviewSasUrl = await GenerateReadOnlySasUrlAsync(blobClient, TimeSpan.FromDays(30));
+
+        // 3. Save to database (both URLs)
+        var result = await SaveImageToDatabaseAsync(plantId, imageUrl, reviewSasUrl);
+        if (!result.IsSuccess)
+        {
+            // Optional: delete the blob if DB save fails (cleanup)
+            await blobClient.DeleteIfExistsAsync();
+            return result;
+        }
+
+        await SendMessageToServiceBusAsync(plantId, reviewSasUrl);
 
         return result;
     }
@@ -112,12 +129,13 @@ public class PlantImageService : IImageService
 
 
     /// <summary>
-    /// Saves the image URL to the database for the specified plant and marks it as pending review.
+    /// Saves the image URL and review SAS URL to the database for the specified plant.
     /// </summary>
     /// <param name="plantId">The ID of the plant to update.</param>
     /// <param name="imageUrl">The URL of the uploaded image.</param>
+    /// <param name="reviewSasUrl">The SAS URL for the uploaded image for review.</param>
     /// <returns>A Result indicating success or failure.</returns>
-    private async Task<Result> SaveImageToDatabaseAsync(int plantId, string imageUrl)
+    private async Task<Result> SaveImageToDatabaseAsync(int plantId, string imageUrl, string reviewSasUrl)
     {
         var plant = await _context.Plants.FindAsync(plantId);
 
@@ -127,6 +145,7 @@ public class PlantImageService : IImageService
         }
 
         plant.ImageFileName = imageUrl;
+        plant.ReviewImageSasUrl = reviewSasUrl; // Store the same URL for review access
         plant.isImageApproved = false; // Mark as pending review
 
         _context.Plants.Update(plant);
@@ -137,19 +156,59 @@ public class PlantImageService : IImageService
 
     /// <summary>
     /// Sends a message to the service bus to trigger the image review process. 
-    /// The message includes the plant ID and image URL for the reviewer to access.
+    /// The message includes the plant ID and SAS URL for the reviewer to access.
     /// </summary>
     /// <param name="plantId">The ID of the plant whose image is being reviewed.</param>
-    /// <param name="imageUrl">The URL of the uploaded image.</param>
-    private async Task SendMessageToServiceBusAsync(int plantId, string imageUrl)
+    /// <param name="reviewSasUrl">The SAS URL of the uploaded image for review.</param>
+    private async Task SendMessageToServiceBusAsync(int plantId, string reviewSasUrl)
     {
         var message = new ServiceBusMessage(JsonSerializer.Serialize(new 
         { 
-            ImageUrl = imageUrl, 
+            ReviewSasUrl = reviewSasUrl, 
             PlantId = plantId,
             Action = "Review" 
         }));
         
         await _serviceBusSender.SendMessageAsync(message);
+    }
+
+
+    /// <summary>
+    /// Generates a read-only read-only Shared Access Signature (SAS) 
+    /// SAS URL for the specified blob with a defined validity period.
+    /// </summary>
+    /// <param name="blob">The Azure BlobClient instance for which to generate the SAS URL.</param>
+    /// <param name="validityPeriod">The validity period for the SAS URL (default is 30 days).</param>
+    /// <returns>The generated read-only SAS URL as a string.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the blob client is not authorized to generate SAS URIs.</exception>
+    private async Task<string> GenerateReadOnlySasUrlAsync(BlobClient blob, TimeSpan validityPeriod = default)
+    {
+        // Default to 30 days if not specified
+        validityPeriod = validityPeriod == default ? TimeSpan.FromDays(30) : validityPeriod;
+
+        if (!blob.CanGenerateSasUri)
+        {
+            throw new InvalidOperationException("BlobClient is not authorized to generate SAS URIs. " +
+                                                "Ensure it's created with SharedKeyCredential or appropriate permissions.");
+        }
+
+        var sasBuilder = new BlobSasBuilder
+        {
+            BlobContainerName = blob.BlobContainerName,
+            BlobName = blob.Name,
+            Resource = "b",  // 'b' = blob
+            StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5),  // small buffer for clock skew
+            ExpiresOn = DateTimeOffset.UtcNow.Add(validityPeriod),
+        };
+
+        sasBuilder.SetPermissions(BlobSasPermissions.Read);  // read-only
+
+        // Optional: restrict to HTTPS only (recommended)
+        sasBuilder.Protocol = SasProtocol.Https;
+
+        // Generate the SAS URI (includes the token)
+        var sasUri = blob.GenerateSasUri(sasBuilder);
+
+        return sasUri.ToString();
     }
 }

@@ -15,8 +15,8 @@ public interface IImageService
     Result ValidateImage(int plantId, IFormFile image);
 
     /// <summary>
-    /// Uploads the image to Azure Blob Storage, saves the image URL to the database 
-    /// for the specified plant, and returns the URL of the uploaded image.
+    /// Uploads the image to Azure Blob Storage, generates a review SAS URL, 
+    /// and saves the image information to the database.    
     /// This method also sends a message to the service bus to trigger the image review process.
     /// </summary>
     /// <param name="plantId">The ID of the plant to associate the image with.</param>

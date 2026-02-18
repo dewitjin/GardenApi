@@ -35,6 +35,12 @@ public class Plant
     public string? ImageFileName { get; set; }
 
     /// <summary>
+    /// A URL to a secure, time-limited access link (SAS URL) 
+    /// for the uploaded image of this plant.
+    /// </summary>
+    public string? ReviewImageSasUrl { get; set; }
+
+    /// <summary>
     /// Indicates whether the uploaded image for this plant 
     /// has been approved by a human reviewer.
     /// </summary>
